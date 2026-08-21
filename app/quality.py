@@ -27,6 +27,11 @@ def brightness_score(gray: np.ndarray) -> float:
     return 1.0 - 4.0 * (mean - 0.5) ** 2
 
 
+def brightness_level(gray: np.ndarray) -> float:
+    """Return the normalized mean brightness used by the configured limits."""
+    return float(np.mean(gray)) / 255.0
+
+
 def contrast_score(gray: np.ndarray) -> float:
     """Standard deviation of pixel intensities, normalized."""
     std = float(np.std(gray)) / 128.0
@@ -73,6 +78,7 @@ def assess_quality(image_bgr: np.ndarray, face_bbox, detection_score: float, fac
     face_w, face_h = x2 - x1, y2 - y1
 
     blur = round(blur_score(gray), 4)
+    brightness_level_value = brightness_level(gray)
     brightness = round(brightness_score(gray), 4)
     contrast = round(contrast_score(gray), 4)
     resolution = round(face_resolution_score(face_w, face_h), 4)
@@ -87,9 +93,9 @@ def assess_quality(image_bgr: np.ndarray, face_bbox, detection_score: float, fac
         issues.append("face_too_large")
     if blur < 0.3:
         issues.append("blurry")
-    if brightness < 0.2:
+    if brightness_level_value < config.min_brightness:
         issues.append("too_dark")
-    if brightness > 0.95:
+    if brightness_level_value > config.max_brightness:
         issues.append("too_bright")
     if resolution < 0.2:
         issues.append("low_resolution")
